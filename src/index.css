@@ -1,14 +1,15 @@
-:root {
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-}
-
-html, body, #root {
+body, html {
   margin: 0;
   padding: 0;
-  width: 100%;
-  height: 100%;
-  background-color: #f3f4f6; /* Lys grå baggrund */
-  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f3f4f6; /* Grå baggrund udenfor mobil-rammen */
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
 }

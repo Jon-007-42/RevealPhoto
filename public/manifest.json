@@ -1,0 +1,8 @@
+{
+  "short_name": "Reveal",
+  "name": "RevealPhoto",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#3b82f6",
+  "background_color": "#ffffff"
+}
