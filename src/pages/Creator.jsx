@@ -60,7 +60,7 @@ export default function Creator() {
 
       if (dbError) throw dbError
 
-      setGameLink(`${window.location.origin}/game/${data[0].id}`)
+      setGameLink(`${window.location.origin}/api/share?id=${data[0].id}`)
     } catch (error) {
       console.error(error)
       alert('Noget gik galt...')
