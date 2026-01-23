@@ -1,4 +1,9 @@
-{
+// RET DENNE LINJE:
+import { createClient } from '@supabase/supabase-js'; 
+
+export default async function handler(req, res) {
+  // ... resten af koden er fin ...
+{ 
   "name": "reveal-photo",
   "private": true,
   "version": "0.0.0",
