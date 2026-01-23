@@ -1,48 +1,56 @@
-// api/share.js
-import { createClient } from '@supabase/supabase-client';
+const { createClient } = require('@supabase/supabase-client');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   const { id } = req.query;
 
+  // Tjek om ID findes
+  if (!id) {
+    return res.status(400).send('Manglende ID');
+  }
+
+  // Brug de variabler du indtastede i Vercel (image_6d3ca4.png)
   const supabase = createClient(
     process.env.VITE_SUPABASE_URL,
     process.env.VITE_SUPABASE_KEY
   );
 
-  // Hent spildata fra Supabase
-  const { data: game, error } = await supabase
-    .from('games')
-    .select('*')
-    .eq('id', id)
-    .single();
+  try {
+    const { data: game, error } = await supabase
+      .from('games')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-  if (error || !game) {
-    return res.status(404).send('Spillet blev ikke fundet');
+    if (error || !game) {
+      return res.status(404).send('Puslespillet blev ikke fundet i databasen');
+    }
+
+    // Vi laver en teaser ved at sætte kvaliteten helt ned (sikker backup hvis blur ikke er aktivt)
+    const teaserImage = `${game.image_path}?width=100&quality=10`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>${game.title}</title>
+        <meta property="og:title" content="${game.title}">
+        <meta property="og:description" content="Nogen har sendt dig en hemmelig hilsen! Løs puslespillet for at se billedet.">
+        <meta property="og:image" content="${teaserImage}">
+        <meta property="og:type" content="website">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta http-equiv="refresh" content="0.5;url=/game/${id}">
+      </head>
+      <body style="font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+        <p>Henter dit puslespil...</p>
+      </body>
+      </html>
+    `;
+
+    res.setHeader('Content-Type', 'text/html');
+    return res.status(200).send(html);
+
+  } catch (err) {
+    return res.status(500).send('Systemfejl: ' + err.message);
   }
-
-  // Her laver vi en teaser-URL. 
-  // Vi kan bruge Supabase's indbyggede resizer til at lave det lille og sløret
-  const teaserImage = `${game.image_path}?width=200&quality=20&blur=50`;
-
-  const html = `
-    <!DOCTYPE html>
-    <html lang="da">
-    <head>
-      <meta charset="UTF-8">
-      <title>${game.title}</title>
-      <meta property="og:title" content="${game.title}">
-      <meta property="og:description" content="Nogen har sendt dig et RevealPhoto! Løs puslespillet for at se billedet.">
-      <meta property="og:image" content="${teaserImage}">
-      <meta property="og:type" content="website">
-      <meta name="twitter:card" content="summary_large_image">
-      <meta http-equiv="refresh" content="0;url=/game/${id}">
-    </head>
-    <body>
-      Sender dig videre til spillet...
-    </body>
-    </html>
-  `;
-
-  res.setHeader('Content-Type', 'text/html');
-  res.send(html);
-}
+};
