@@ -1,9 +1,4 @@
-// RET DENNE LINJE:
-import { createClient } from '@supabase/supabase-js'; 
-
-export default async function handler(req, res) {
-  // ... resten af koden er fin ...
-{ 
+{
   "name": "reveal-photo",
   "private": true,
   "version": "0.0.0",
@@ -15,7 +10,7 @@ export default async function handler(req, res) {
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.89.0",
+    "@supabase/supabase-js": "^2.39.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-easy-crop": "^5.5.6",
