@@ -1,20 +1,24 @@
+// Brug dynamisk import for at undgå CommonJS/ESM konflikter
 const { createClient } = require('@supabase/supabase-client');
 
 module.exports = async (req, res) => {
-  const { id } = req.query;
-
-  // Tjek om ID findes
-  if (!id) {
-    return res.status(400).send('Manglende ID');
-  }
-
-  // Brug de variabler du indtastede i Vercel (image_6d3ca4.png)
-  const supabase = createClient(
-    process.env.VITE_SUPABASE_URL,
-    process.env.VITE_SUPABASE_KEY
-  );
-
   try {
+    const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).send('Manglende spil-ID');
+    }
+
+    // Hent variablerne - tjekker både med og uden VITE_
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_KEY || process.env.VITE_SUPABASE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase variabler mangler i Vercel');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
     const { data: game, error } = await supabase
       .from('games')
       .select('*')
@@ -22,35 +26,28 @@ module.exports = async (req, res) => {
       .single();
 
     if (error || !game) {
-      return res.status(404).send('Puslespillet blev ikke fundet i databasen');
+      return res.status(404).send('Spillet blev ikke fundet.');
     }
 
-    // Vi laver en teaser ved at sætte kvaliteten helt ned (sikker backup hvis blur ikke er aktivt)
-    const teaserImage = `${game.image_path}?width=100&quality=10`;
+    const teaserImage = `${game.image_path}?width=200&quality=15`;
 
-    const html = `
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(`
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="UTF-8">
         <title>${game.title}</title>
         <meta property="og:title" content="${game.title}">
-        <meta property="og:description" content="Nogen har sendt dig en hemmelig hilsen! Løs puslespillet for at se billedet.">
         <meta property="og:image" content="${teaserImage}">
-        <meta property="og:type" content="website">
-        <meta name="twitter:card" content="summary_large_image">
-        <meta http-equiv="refresh" content="0.5;url=/game/${id}">
+        <meta property="og:description" content="Løs puslespillet for at se billedet!">
+        <meta http-equiv="refresh" content="0;url=/game/${id}">
       </head>
-      <body style="font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
-        <p>Henter dit puslespil...</p>
-      </body>
+      <body>Viderestiller...</body>
       </html>
-    `;
-
-    res.setHeader('Content-Type', 'text/html');
-    return res.status(200).send(html);
-
+    `);
   } catch (err) {
-    return res.status(500).send('Systemfejl: ' + err.message);
+    console.error('SERVER FEJL:', err.message);
+    return res.status(500).json({ error: err.message });
   }
 };
